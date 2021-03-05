@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-export const getQuestions = async(tag, startdate, endDate, sortBy) => {
+export const getQuestions = async(tag, startDate, endDate, sortBy) => {
     try {
-        const resp = await axios.get(`https://api.stackexchange.com/2.2/questions?order=desc&sort=${sortBy}&tagged=${tag}&site=stackoverflow&key=t29gugj)zVXNQJ5n)lgk0Q((`)
+        const resp = await axios.get(`https://api.stackexchange.com/2.2/questions?fromdate=${startDate}&todate=${endDate}&order=desc&sort=${sortBy}&tagged=${tag}&site=stackoverflow&key=t29gugj)zVXNQJ5n)lgk0Q((`)
         const statusCode = resp.status
         const data = resp.data
         var questions = {}
