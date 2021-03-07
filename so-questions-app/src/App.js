@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import ReactHtmlParser from "react-html-parser";
-import './App.css';
 import { getQuestions, getAnswers } from './getPostInfo.js';
+import './App.css';
 
 function App() {
   const [questions, setQuestions] = useState([])
@@ -10,7 +10,7 @@ function App() {
   const [questionRespTime, setQuestionRespTime] = useState(0)
   const [answerRespTime, setAnswerRespTime] = useState(0)
 
-
+  //Get current timestamp and timestamp from one week ago
   const getDates = () => {
     const endDate = Math.floor(Date.now() / 1000)
     const timeOffset = new Date()
@@ -22,6 +22,7 @@ function App() {
     return {startDate, endDate}
   }
 
+  //Adjust timestamp to just the info needed, then add an id
   const adjustTimestamp = (list) => {
     for(var i=0; i<list.length; i++) {
       var date = new Date(0)
@@ -33,6 +34,8 @@ function App() {
     return list
   }
 
+  //Reduce to top 20 questions and merge together
+  //Then adjust timestamps and comment timestamps
   const refineQuestionLists = (topVoted, topNewest) => {
     if(topVoted && topNewest) {
       if(topVoted.length > 10)
@@ -52,20 +55,39 @@ function App() {
     }
   }
 
-  const handleSubmit = (event) => {
-    var startTimer = Date.now() / 1000
-    event.preventDefault()
-    const dates = getDates()
-    Promise.all([getQuestions(tag,dates.startDate,dates.endDate,'votes'), getQuestions(tag,dates.startDate,dates.endDate,'creation')]).then(([topVoted, topNewest]) => {
-      if(topVoted && topNewest)
-        refineQuestionLists(topVoted, topNewest)
-    }).then(() => {
-      setQuestionRespTime(((Date.now() / 1000) - startTimer).toFixed(5))
-    })
+  //Toggle the active class name
+  const toggle = (event) => {
+    event.target.classList.toggle("active")
+    var content = event.target.nextElementSibling
+    if(content.style.maxHeight){
+      content.style.maxHeight = null
+    }
+    else {
+      content.style.maxHeight = content.scrollHeight + "px";
+    }
   }
 
+  //On submit if not an empty query, then get top voted and top newest
+  //questions, then refine the questions to correct format 
+  //Response time starts when called and ends when response is returned and refined
+  const handleSubmit = (event) => {
+    if(tag !== " " && tag !== "") {
+      var startTimer = Date.now() / 1000
+      event.preventDefault()
+      const dates = getDates()
+      Promise.all([getQuestions(tag,dates.startDate,dates.endDate,'votes'), getQuestions(tag,dates.startDate,dates.endDate,'creation')]).then(([topVoted, topNewest]) => {
+        if(topVoted && topNewest)
+          refineQuestionLists(topVoted, topNewest)
+      }).then(() => {
+        setQuestionRespTime(((Date.now() / 1000) - startTimer).toFixed(5))
+      })
+    }
+  }
+
+  //When collapsible is clicked and is not already open, get all answers
+  //and comments for that question, adjust their timestamp and toggle container
+  //Response time starts when called and ends when response is returned and refined
   const handleClick = (event) => {
-    //make all other non active
     var startTimer = Date.now() / 1000
     var id = event.target.id
     if(!event.target.classList.contains("active")) {
@@ -77,20 +99,17 @@ function App() {
         }
         setAnswers(questionAnswers)
       }).then(() => {
+        toggle(event)
+      }).then(() => {
         setAnswerRespTime(((Date.now() / 1000) - startTimer).toFixed(5))
       })
     }
-
-    event.target.classList.toggle("active")
-    var content = event.target.nextElementSibling
-    if(content.style.maxHeight){
-      content.style.maxHeight = null
-    }
     else {
-      content.style.maxHeight = content.scrollHeight + "px";
+      toggle(event)
     }
   }
 
+  //On text change, set the tag value
   const handleChange = (event) => {
     setTag(event.target.value)
   }
@@ -106,22 +125,22 @@ function App() {
       </form>
       {questions && questions.map(question => 
       <div key={question.order_id}>
-        <button className="collapsible" id={question.order_id} onClick={handleClick}>{question.title}<br></br>{question.creation_date}<br></br>Votes: {question.score}</button>
+        <button className="collapsible" id={question.order_id} onClick={handleClick}>{ReactHtmlParser(question.title)}<br></br>{question.creation_date}<br></br>Votes: {question.score}</button>
           <div className="content">
             <div className="question">{ReactHtmlParser(question.body)}</div>
             {question.comments && question.comments.map(comment => 
             <div key={comment.comment_id} className="comments"><br></br>
-              {comment.order_id + 1}: {ReactHtmlParser(comment.body)}    
+              <b>{comment.order_id + 1}:</b> {ReactHtmlParser(comment.body)}    
               <b>&ensp;{comment.creation_date}&emsp;Votes: {comment.score}</b><br></br>
             </div>)}
             {answers && answers.map(answer => 
-            <div key={answer.answer_id}>
-              <div className="answer_title"> Answer {answer.order_id + 1}
+            <div className="answer_list" key={answer.answer_id}>
+              <div className="answer_title"> Answer #{answer.order_id + 1}
               <br></br>{answer.creation_date}<br></br>Votes: {answer.score}</div>
               <div className="answer">{ReactHtmlParser(answer.body)}</div>
               {answer.comments && answer.comments.map(comment => 
               <div key={comment.comment_id} className="comments"><br></br>
-                {comment.order_id + 1}: {ReactHtmlParser(comment.body)}
+                <b>{comment.order_id + 1}:</b> {ReactHtmlParser(comment.body)}
                 <b>&ensp;{comment.creation_date}&emsp;Votes: {comment.score}</b><br></br>
               </div>)}
             </div>)}
