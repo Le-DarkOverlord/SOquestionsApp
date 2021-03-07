@@ -44,7 +44,7 @@ function App() {
       topNewest.length = 10
       var questionList = topVoted.concat(topNewest)
       questionList.sort((a,b) => {
-        return a.creation_date - b.creation_date
+        return b.creation_date - a.creation_date
       })
       questionList = adjustTimestamp(questionList)
       for(var i=0; i<questionList.length; i++) {
