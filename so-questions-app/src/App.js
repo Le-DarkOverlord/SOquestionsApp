@@ -4,10 +4,15 @@ import { getQuestions, getAnswers } from './getPostInfo.js';
 import './App.css';
 
 function App() {
+  //Holds the current question list state
   const [questions, setQuestions] = useState([])
+  //Holds the current answer list state
   const [answers, setAnswers] = useState([])
+  //Holds the tag that was typed
   const [tag, setTag] = useState('')
+  //Holds the question response time from Stack Apps API
   const [questionRespTime, setQuestionRespTime] = useState(0)
+  //Holds the answer response time from Stack Apps API
   const [answerRespTime, setAnswerRespTime] = useState(0)
 
   //Get current timestamp and timestamp from one week ago
